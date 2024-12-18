@@ -10,7 +10,7 @@ def get_python_command() -> str:
     try:
         subprocess.run("python3 --version", check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return "python3"
-    except subprocess.CalledProcessError:
+    except Exception:
         pass
 
     # If python3 is not available, check python
@@ -19,7 +19,7 @@ def get_python_command() -> str:
         version = result.stdout.decode().strip() or result.stderr.decode().strip()
         if version.startswith("Python 3"):
             return "python"
-    except subprocess.CalledProcessError:
+    except Exception:
         pass
 
     raise EnvironmentError("No compatible Python 3 interpreter found on the system.")
