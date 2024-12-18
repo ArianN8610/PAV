@@ -17,5 +17,6 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",
-    install_requires=["click"]
+    install_requires=["click"],
+    entry_points={"console_scripts": ["pav=pav.cli:main"]}
 )
