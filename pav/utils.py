@@ -8,14 +8,15 @@ def get_python_command() -> str:
 
     # Is there python3?
     try:
-        subprocess.run("python3 --version", check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run("python3 --version", check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         return "python3"
     except Exception:
         pass
 
     # If python3 is not available, check python
     try:
-        result = subprocess.run("python --version", check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run("python --version", check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                shell=True)
         version = result.stdout.decode().strip() or result.stderr.decode().strip()
         if version.startswith("Python 3"):
             return "python"
