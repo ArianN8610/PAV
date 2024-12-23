@@ -33,7 +33,7 @@ def main():
     type=click.Path(exists=True, file_okay=True, dir_okay=False)
 )
 def file(file_path: str, venv_path: str | None, arguments: str | None):
-    """Execute Python file with venv"""
+    """Execute Python file"""
 
     if not file_path.endswith(".py"):
         raise click.BadParameter("File extension must be .py")
@@ -53,10 +53,27 @@ def file(file_path: str, venv_path: str | None, arguments: str | None):
 
     # Activate venv and run Python file
     activate_venv_and_run(
-        venv_path,
         f"{get_python_command()} {file_path} {arguments if arguments is not None else ''}",
+        venv_path,
         file_dir
     )
+
+
+@main.command()
+@venv_path_option
+@click.argument("cmd")
+def command(cmd: str, venv_path: str | None):
+    """Execute a shell command"""
+
+    # Specify venv path
+    if venv_path is None:
+        current_dir = Path.cwd()
+        if (current_dir / "venv").exists():
+            venv_path = current_dir / "venv"
+    else:
+        venv_path = Path(venv_path)
+
+    activate_venv_and_run(cmd, venv_path)
 
 
 if __name__ == "__main__":

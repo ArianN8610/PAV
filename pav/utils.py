@@ -47,7 +47,7 @@ def get_python_command() -> str:
     logger.error("No compatible Python 3 interpreter found on the system.")
 
 
-def activate_venv_and_run(venv_path: Path | None, command: str, chdir_path: Path | None) -> None:
+def activate_venv_and_run(command: str, venv_path: Path | None = None, chdir_path: Path | None = None) -> None:
     """
     Activate venv and run command
     :param venv_path: Path to the venv directory
