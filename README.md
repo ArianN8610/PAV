@@ -18,7 +18,7 @@ pav --help
 ```
 
 ## Features
-### pav file
+### file
 It takes the file path for argument and if the venv path was not given manually, it detects the venv path if it exists and activates it and runs the Python file (If the venv is located in a specific path that the program may not automatically recognize, it is better to enter it manually)  
 Here are some examples:
 ```bash
@@ -31,6 +31,12 @@ pav file ./project/main.py --venv-path ../venv_dir
 If the file you want to execute needs to take some arguments, you can use --arguments:
 ```bash
 pav file ./project/main.py --arguments "create --name file_name -u"
+```
+
+### command
+It works like "file" except that it takes a command as input and executes it after activating venv.
+```bash
+pav command "pip install lib"
 ```
 
 ## Requirements
