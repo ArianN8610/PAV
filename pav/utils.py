@@ -1,6 +1,27 @@
 import os
+import sys
+import logging
 import subprocess
 from pathlib import Path
+
+
+class ExitOnErrorHandler(logging.StreamHandler):
+    def emit(self, record):
+        super().emit(record)  # Display error message
+        if record.levelno >= logging.ERROR:  # If the message level was ERROR or higher
+            sys.exit(1)  # Exit the program with error code
+
+
+logger = logging.getLogger(__name__)
+
+# Configure logging only if not already configured
+if not logger.hasHandlers():
+    handler = ExitOnErrorHandler(sys.stderr)  # Use a custom handler
+    formatter = logging.Formatter("{levelname}: {message}", style="{")
+    handler.setFormatter(formatter)
+
+    logger.setLevel(logging.ERROR)  # Default logging level
+    logger.addHandler(handler)
 
 
 def get_python_command() -> str:
@@ -23,7 +44,7 @@ def get_python_command() -> str:
     except Exception:
         pass
 
-    raise EnvironmentError("No compatible Python 3 interpreter found on the system.")
+    logger.error("No compatible Python 3 interpreter found on the system.")
 
 
 def activate_venv_and_run(venv_path: Path | None, command: str, chdir_path: Path | None) -> None:
@@ -52,7 +73,7 @@ def activate_venv_and_run(venv_path: Path | None, command: str, chdir_path: Path
                 activate_script = venv_path / "bin" / "activate"
 
             if not activate_script.exists():
-                raise FileNotFoundError(f"Cannot find activation script at {activate_script}")
+                logger.error(f"Cannot find activation script at {activate_script}")
 
             # Create a command to run the activation script and execute the command
             if os.name == "nt":  # Windows
@@ -65,4 +86,4 @@ def activate_venv_and_run(venv_path: Path | None, command: str, chdir_path: Path
             # If no venv_path is provided, run the command directly
             subprocess.run(command, shell=True)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(e)

@@ -28,9 +28,9 @@ To specify the venv path manually:
 ```bash
 pav file ./project/main.py --venv-path ../venv_dir
 ```
-If the file you want to execute needs to take some arguments, you can use --file-arguments:
+If the file you want to execute needs to take some arguments, you can use --arguments:
 ```bash
-pav file ./project/main.py --file-arguments "create --name file_name -u"
+pav file ./project/main.py --arguments "create --name file_name -u"
 ```
 
 ## Requirements
