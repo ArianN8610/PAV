@@ -37,13 +37,13 @@ def file(file_path: str, venv_path: str | None, arguments: str | None):
 
     if not file_path.endswith(".py"):
         raise click.BadParameter("File extension must be .py")
-    file_path = Path(file_path)
+
+    current_dir = Path.cwd()  # Get the current directory
+    file_path = (current_dir / file_path).resolve()
     file_dir = file_path.parent  # Get the file directory
 
     # Specify venv path
     if venv_path is None:
-        current_dir = Path.cwd()  # Get the current directory
-
         if (file_dir / "venv").exists():
             venv_path = file_dir / "venv"
         elif (current_dir / "venv").exists():
