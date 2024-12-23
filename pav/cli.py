@@ -22,17 +22,17 @@ def main():
 @main.command()
 @venv_path_option
 @click.option(
-    "-a", "--file-arguments",
+    "-a", "--arguments",
     type=click.STRING,
     help="Specify additional arguments to pass to the Python file during execution. "
          "Use quotes for multiple arguments or arguments containing spaces. "
-         "For example: --file-arguments=\"-a 42 --verbose\""
+         "For example: --arguments=\"-a 42 --verbose\""
 )
 @click.argument(
     "file_path",
     type=click.Path(exists=True, file_okay=True, dir_okay=False)
 )
-def file(file_path: str, venv_path: str | None, file_arguments: str | None):
+def file(file_path: str, venv_path: str | None, arguments: str | None):
     """Execute Python file with venv"""
 
     if not file_path.endswith(".py"):
@@ -54,7 +54,7 @@ def file(file_path: str, venv_path: str | None, file_arguments: str | None):
     # Activate venv and run Python file
     activate_venv_and_run(
         venv_path,
-        f"{get_python_command()} {file_path} {file_arguments if file_arguments is not None else ''}",
+        f"{get_python_command()} {file_path} {arguments if arguments is not None else ''}",
         file_dir
     )
 
