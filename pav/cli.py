@@ -1,7 +1,7 @@
 import click
 from pathlib import Path
 
-from .utils import activate_venv_and_run, get_python_command
+from .utils import activate_venv_and_run, get_python_command, get_venv_path
 
 
 def venv_path_option(func):
@@ -65,15 +65,21 @@ def file(file_path: str, venv_path: str | None, arguments: str | None):
 def command(cmd: str, venv_path: str | None):
     """Execute a shell command"""
 
-    # Specify venv path
-    if venv_path is None:
-        current_dir = Path.cwd()
-        if (current_dir / "venv").exists():
-            venv_path = current_dir / "venv"
-    else:
-        venv_path = Path(venv_path)
-
+    venv_path = get_venv_path(venv_path)
     activate_venv_and_run(cmd, venv_path)
+
+
+@main.command()
+@venv_path_option
+def shell(venv_path: str | None):
+    """Open shell to execute commands (To exit shell, enter "exit")"""
+
+    venv_path = get_venv_path(venv_path)
+    while True:
+        cmd = input("> ")
+        if cmd in "exit":
+            break
+        activate_venv_and_run(cmd, venv_path)
 
 
 if __name__ == "__main__":

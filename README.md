@@ -39,6 +39,18 @@ It works like "file" except that it takes a command as input and executes it aft
 pav command "pip install lib"
 ```
 
+### shell
+It opens a shell with activate venv to execute commands.
+```bash
+pav shell
+> pip list
+
+Package       Version
+------------- -------
+numpy         2.0.0
+pip           24.0
+```
+
 ## Requirements
 * Python 3.6 or higher
 * [Click](https://click.palletsprojects.com/en/stable/) library for command-line handling (automatically installed as a dependency)
