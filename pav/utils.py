@@ -24,6 +24,19 @@ if not logger.hasHandlers():
     logger.addHandler(handler)
 
 
+def get_venv_path(venv_path: str | None) -> Path | None:
+    """Specify venv path"""
+
+    if venv_path is None:
+        current_dir = Path.cwd()
+        if (current_dir / "venv").exists():
+            venv_path = current_dir / "venv"
+    else:
+        venv_path = Path(venv_path)
+
+    return venv_path
+
+
 def get_python_command() -> str:
     """Check for python3 (for Mac and Linux)"""
 
