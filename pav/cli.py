@@ -1,3 +1,5 @@
+from os import chdir
+
 import click
 from pathlib import Path
 
@@ -71,10 +73,30 @@ def command(cmd: str, venv_path: str | None):
 
 @main.command()
 @venv_path_option
-def shell(venv_path: str | None):
+@click.option(
+    "-w", "--workdir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    help="Change the working directory before executing commands"
+)
+def shell(venv_path: str | None, workdir: str | None):
     """Open shell to execute commands (To exit shell, enter "exit")"""
 
-    venv_path = get_venv_path(venv_path)
+    current_dir = Path.cwd()  # Get the current working directory
+    if workdir is not None:
+        chdir(workdir)  # Change the working directory
+        working_dir = Path(workdir)
+
+        # Specify venv path
+        if venv_path is None:
+            if (working_dir / "venv").exists():
+                venv_path = working_dir / "venv"
+            elif (current_dir / "venv").exists():
+                venv_path = current_dir / "venv"
+        else:
+            venv_path = (current_dir / venv_path).resolve()
+    else:
+        venv_path = get_venv_path(venv_path)
+
     while True:
         cmd = input("> ")
         if cmd in "exit":
