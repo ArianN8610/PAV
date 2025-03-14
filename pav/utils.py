@@ -90,10 +90,10 @@ def activate_venv_and_run(command: str, venv_path: Path | None = None, chdir_pat
 
             # Create a command to run the activation script and execute the command
             if os.name == "nt":  # Windows
-                cmd = f'{activate_script} & {command}'
+                cmd = [str(activate_script), "&", command]
                 subprocess.run(cmd, shell=True)
             else:  # Mac/Linux
-                cmd = f'source {activate_script} && {command}'
+                cmd = ["source", str(activate_script), "&&", command]
                 subprocess.run(cmd, shell=True, executable="/bin/bash")  # To use the "source" command, must change the shell from "/bin/sh" to "/bin/bash"
         else:
             # If no venv_path is provided, run the command directly

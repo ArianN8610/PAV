@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pav",
-    version="1.2.1",
+    version="1.2.2",
     author="Arian",
     author_email="ariannasiri86@gmail.com",
     description="PAV is a Python library with features to easily work with venv",
@@ -17,6 +17,6 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",
-    install_requires=["click"],
+    install_requires=["click==8.1.8"],
     entry_points={"console_scripts": ["pav=pav.cli:main"]}
 )
