@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pav",
-    version="1.2.2",
+    version="1.2.3",
     author="Arian",
     author_email="ariannasiri86@gmail.com",
     description="PAV is a Python library with features to easily work with venv",
