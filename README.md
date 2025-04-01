@@ -33,10 +33,10 @@ If the file you want to execute needs to take some arguments, you can use --argu
 pav file ./project/main.py --arguments "create --name file_name -u"
 ```
 
-### command
+### cmd
 It works like "file" except that it takes a command as input and executes it after activating venv.
 ```bash
-pav command "pip install lib"
+pav cmd "pip install lib"
 ```
 
 ### shell
