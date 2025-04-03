@@ -124,7 +124,8 @@ def shell(venv_path: str | None, workdir: str | None):
     type=click.Path(file_okay=True, dir_okay=False), default=None, flag_value="requirements.txt",
     help="Save results to a file. If provided without a value, defaults to 'requirements.txt'"
 )
-def reqs(project, exist, standard, output, venv_path):
+@click.option("-i", "--install", is_flag=True, help="Install the found packages in venv")
+def reqs(project, exist, standard, output, venv_path, install):
     """Find requirements for a project or install them after finding"""
 
     project_path = Path(project)
@@ -140,7 +141,9 @@ def reqs(project, exist, standard, output, venv_path):
         venv_path = (current_dir / venv_path).resolve()
 
     # Check only for third-party modules
-    if exist is not None:
+    if exist or install:
+        if exist is None:
+            exist = 'false'
         standard = 'false'
 
     requirements = Reqs(project_path, exist, standard, venv_path).find()
@@ -151,8 +154,21 @@ def reqs(project, exist, standard, output, venv_path):
             # Save to a file
             with open(output, 'w', encoding='utf-8') as f:
                 f.write(result + '\n')
-        else:
+        elif not install:
             click.echo(result)
+
+        # Install requirements
+        if install:
+            display_venv_path = 'System' if venv_path is None else str(venv_path)
+            click.echo(click.style('Venv path: ', fg='blue') + display_venv_path)
+            click.echo(click.style('Packages: ', fg='blue') + ' - '.join(requirements))
+
+            entry = input('\nInstall? (yes/no) ')
+            if entry in ('yes', 'y'):
+                activate_venv_and_run(
+                    f'{get_python_command()} -m pip install {" ".join(requirements)}',
+                    venv_path
+                )
     else:
         click.echo(click.style('No requirements found.', fg='red'))
 
