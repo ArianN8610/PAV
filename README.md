@@ -33,10 +33,10 @@ If the file you want to execute needs to take some arguments, you can use --argu
 pav file ./project/main.py --arguments "create --name file_name -u"
 ```
 
-### command
+### cmd
 It works like "file" except that it takes a command as input and executes it after activating venv.
 ```bash
-pav command "pip install lib"
+pav cmd "pip install lib"
 ```
 
 ### shell
@@ -50,6 +50,22 @@ Package       Version
 numpy         2.0.0
 pip           24.0
 ```
+
+### reqs
+It finds requirements for a project. It also can install them after finding. example:
+```bash
+pav reqs -p core -e false -o
+```
+
+#### Options
+| Option             | Description                                                                   |
+|--------------------|-------------------------------------------------------------------------------|
+| `-p`, `--project`  | Path to project for finding requirements (**default:** current directory `.`) |
+| `-s`, `--standard` | Filter based on Python's built-in modules (true \| false)                     |
+| `-e`, `--exist`    | Filter based on modules installed in venv (true \| false)                     |
+| `-o`, `--output`   | Save results to a file (**default:** `requirements.txt`)                      |
+| `-i`, `--install`  | Install the found packages in venv                                            |
+
 
 ## Requirements
 * Python 3.6 or higher
