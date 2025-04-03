@@ -106,6 +106,7 @@ def shell(venv_path: str | None, workdir: str | None):
 
 
 @main.command()
+@venv_path_option
 @click.option(
     "-p", "--project", type=click.Path(exists=True, file_okay=False, dir_okay=True),
     default='.', show_default=True, help="Path to project for finding requirements"
@@ -123,9 +124,26 @@ def shell(venv_path: str | None, workdir: str | None):
     type=click.Path(file_okay=True, dir_okay=False), default=None, flag_value="requirements.txt",
     help="Save results to a file. If provided without a value, defaults to 'requirements.txt'"
 )
-def reqs(project, exist, standard, output):
+def reqs(project, exist, standard, output, venv_path):
     """Find requirements for a project or install them after finding"""
-    requirements = Reqs(project, exist, standard).find()
+
+    project_path = Path(project)
+    current_dir = Path.cwd()
+
+    # Specify venv path
+    if venv_path is None:
+        if (project_path / "venv").exists():
+            venv_path = project_path / "venv"
+        elif (current_dir / "venv").exists():
+            venv_path = current_dir / "venv"
+    else:
+        venv_path = (current_dir / venv_path).resolve()
+
+    # Check only for third-party modules
+    if exist is not None:
+        standard = 'false'
+
+    requirements = Reqs(project_path, exist, standard, venv_path).find()
     result = '\n'.join(requirements)
 
     if requirements:

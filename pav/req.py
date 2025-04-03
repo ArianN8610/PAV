@@ -1,19 +1,24 @@
-import os
+import re
 from pathlib import Path
+from sysconfig import get_path
 from importlib.util import find_spec
 
 # Directories that aren't suitable for searching requirements
-EXCLUDED_DIRS = {
+EXCLUDED_DIRS = (
     "venv", ".venv", "__pycache__", ".git", ".hg", ".svn", ".idea", ".vscode",
     "node_modules", "dist", "build", "migrations", "logs", "coverage", ".coverage",
     "staticfiles", "media", ".pytest_cache"
-}
+)
 
 
-def is_relative_to(path, base):
-    """Check if base is in path"""
-    base = os.path.abspath(base)
-    return os.path.commonpath([path, base]) == base
+def is_relative_to(path):
+    """Check if path includes 'EXCLUDED_DIRS'"""
+
+    # Create a regex pattern to search for exclude dirs
+    patterns = map(re.escape, EXCLUDED_DIRS)
+    final_pattern = '|'.join(rf'\\?{d}\\' for d in patterns)
+
+    return bool(re.search(final_pattern, str(path)))
 
 
 def is_standard_library(module_name: str) -> bool:
@@ -26,10 +31,11 @@ def is_standard_library(module_name: str) -> bool:
 
 
 class Reqs:
-    def __init__(self, project: str, exist: str | None, standard: str| None):
-        self.project = Path(project)
+    def __init__(self, project: Path, exist: str|None, standard: str|None, venv_path: Path|None):
+        self.project = project
         self.exist = exist
         self.standard = standard
+        self.venv_path = venv_path
 
     def is_internal_module(self, module_name: str) -> bool:
         """
@@ -42,12 +48,22 @@ class Reqs:
         # If a file or directory associated with this module exists, it is internal
         return module_path.exists() or module_dir.exists()
 
-    def conditions(self, module_name: str) -> bool:
+    def get_site_packages(self) -> Path:
+        """Find the correct site-packages path inside a virtual environment"""
+        site_packages_relative = get_path("purelib", vars={"base": self.venv_path})
+        return Path(site_packages_relative)
+
+    def conditions(self, module_name: str, site_packages: Path) -> bool:
         result = set()
 
         # Found on the system (i.e. installed)
         if self.exist:
-            spec = bool(find_spec(module_name))
+            if self.venv_path is not None:
+                # Check if module is installed inside venv
+                spec = (site_packages / module_name).exists() or (site_packages / f'{module_name}.py').exists()
+            else:
+                spec = bool(find_spec(module_name))
+
             result.add(spec if self.exist == 'true' else not spec)
 
         # Filter based on built-in Python module
@@ -60,12 +76,13 @@ class Reqs:
     def find(self) -> list[str]:
         """Find all requirements for a project and return a list of them"""
         requirements = set()
+        site_packages = self.get_site_packages() if self.venv_path else None
 
         for p in self.project.rglob('*.py'):
             p_resolved = p.resolve()
 
             # Filter excluded paths
-            if any(is_relative_to(p_resolved, exc) for exc in EXCLUDED_DIRS):
+            if is_relative_to(p_resolved):
                 continue
 
             # Read file line by line
@@ -74,11 +91,11 @@ class Reqs:
                     line = line.strip()
 
                     # Find lines that import something
-                    if line.startswith(('import', 'from')):
+                    if line.startswith(('import ', 'from ')):
                         parts = line.split()[1]
                         module_name = parts.split('.')[0]  # Get the original module name
 
-                        if not self.is_internal_module(parts) and self.conditions(module_name):
+                        if not self.is_internal_module(parts) and self.conditions(module_name, site_packages):
                             requirements.add(module_name)
 
         return sorted(requirements)
