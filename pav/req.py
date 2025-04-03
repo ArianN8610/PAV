@@ -37,16 +37,20 @@ class Reqs:
         self.standard = standard
         self.venv_path = venv_path
 
-    def is_internal_module(self, module_name: str) -> bool:
+    def is_internal_module(self, module_name: str, p_resolved: Path) -> bool:
         """
         Check whether a module is part of the project or an external library
         If the module is in the project path, it is internal
         """
+        p_parent = p_resolved.parent
+        module_path_parent = (p_parent / (module_name.replace(".", "/") + ".py")).resolve()
+        module_dir_parent = (p_parent / module_name.split(".")[0]).resolve()
+
         module_path = (self.project / (module_name.replace(".", "/") + ".py")).resolve()
         module_dir = (self.project / module_name.split(".")[0]).resolve()
 
         # If a file or directory associated with this module exists, it is internal
-        return module_path.exists() or module_dir.exists()
+        return module_path.exists() or module_dir.exists() or module_dir_parent.exists() or module_path_parent.exists()
 
     def get_site_packages(self) -> Path:
         """Find the correct site-packages path inside a virtual environment"""
@@ -95,7 +99,7 @@ class Reqs:
                         parts = line.split()[1]
                         module_name = parts.split('.')[0]  # Get the original module name
 
-                        if not self.is_internal_module(parts) and self.conditions(module_name, site_packages):
+                        if not self.is_internal_module(parts, p_resolved) and self.conditions(module_name, site_packages):
                             requirements.add(module_name)
 
         return sorted(requirements)
