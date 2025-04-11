@@ -56,7 +56,7 @@ def file(file_path: str, venv_path: str | None, arguments: str | None):
 
     # Activate venv and run Python file
     activate_venv_and_run(
-        f"{get_python_command()} {file_path} {arguments if arguments is not None else ''}",
+        f"{get_python_command()} \"{file_path}\" {arguments if arguments is not None else ''}",
         venv_path,
         file_dir
     )
