@@ -8,7 +8,7 @@ pip install pav
 ```
 
 ## Usage
-You can use **PAV** through terminal. Here’s a quick example:
+You can use **PAV** through terminal. Here's a quick example:
 ```bash
 pav file main.py
 ```
@@ -63,6 +63,7 @@ pav reqs -p core -e false -o
 | `-p`, `--project`  | Path to project for finding requirements (**default:** current directory `.`) |
 | `-s`, `--standard` | Filter based on Python's built-in modules (true \| false)                     |
 | `-e`, `--exist`    | Filter based on modules installed in venv (true \| false)                     |
+| `--version`        | Find module versions from venv or PyPi                                        |
 | `-o`, `--output`   | Save results to a file (**default:** `requirements.txt`)                      |
 | `-i`, `--install`  | Install the found packages in venv                                            |
 
