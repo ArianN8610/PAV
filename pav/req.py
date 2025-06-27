@@ -1,7 +1,9 @@
 import re
+import requests
 from pathlib import Path
 from sysconfig import get_path
 from importlib.util import find_spec
+from .utils import activate_venv_and_run, get_python_command
 
 # Directories that aren't suitable for searching requirements
 EXCLUDED_DIRS = (
@@ -30,12 +32,21 @@ def is_standard_library(module_name: str) -> bool:
     return "site-packages" not in spec.origin and "dist-packages" not in spec.origin
 
 
+def get_pypi_names(modules: list[str]) -> dict:
+    """Get PyPI module names from mapping file"""
+    mapping_path = Path(__file__).parent / "mapping"
+    with open(mapping_path, "r") as f:
+        names = dict(line.strip().split(":") for line in f)
+    return {p: names.get(p, p) for p in modules}
+
+
 class Reqs:
-    def __init__(self, project: Path, exist: str|None, standard: str|None, venv_path: Path|None):
+    def __init__(self, project: Path, exist: str|None, standard: str|None, venv_path: Path|None, need_version: bool):
         self.project = project
         self.exist = exist
         self.standard = standard
         self.venv_path = venv_path
+        self.version = need_version
 
     def is_internal_module(self, module_name: str, p_resolved: Path) -> bool:
         """
@@ -57,17 +68,21 @@ class Reqs:
         site_packages_relative = get_path("purelib", vars={"base": self.venv_path})
         return Path(site_packages_relative)
 
-    def conditions(self, module_name: str, site_packages: Path) -> bool:
+    def is_module_exist(self, module_name: str) -> bool:
+        """Check if module is installed inside venv"""
+        if self.venv_path is not None:
+            site_packages = self.get_site_packages()
+            spec = (site_packages / module_name).exists() or (site_packages / f'{module_name}.py').exists()
+        else:
+            spec = bool(find_spec(module_name))
+        return spec
+
+    def conditions(self, module_name: str) -> bool:
         result = set()
 
         # Found on the system (i.e. installed)
         if self.exist:
-            if self.venv_path is not None:
-                # Check if module is installed inside venv
-                spec = (site_packages / module_name).exists() or (site_packages / f'{module_name}.py').exists()
-            else:
-                spec = bool(find_spec(module_name))
-
+            spec = self.is_module_exist(module_name)
             result.add(spec if self.exist == 'true' else not spec)
 
         # Filter based on built-in Python module
@@ -77,11 +92,36 @@ class Reqs:
 
         return all(result)
 
-    def find(self) -> list[str]:
-        """Find all requirements for a project and return a list of them"""
-        requirements = set()
-        site_packages = self.get_site_packages() if self.venv_path else None
+    def get_module_version(self, module_name: tuple) -> str|None:
+        """Get module version (If the module is not installed, its version will be taken from PyPi.)"""
+        if not is_standard_library(module_name[0]):
+            if self.is_module_exist(module_name[0]):
+                # Get module info from pip
+                output = activate_venv_and_run(
+                    f"{get_python_command()} -m pip show {module_name[1]}",
+                    self.venv_path,
+                    capture_output = True
+                ).lower()
+                # Return module version if it exists
+                return next(
+                    (line.split(":", 1)[1].strip()
+                     for line in output.splitlines()
+                     if line.startswith("version:")),
+                    None  # default if not found
+                )
+            else:
+                # Get version from PyPi
+                url = f"https://pypi.org/pypi/{module_name[1]}/json"
+                response = requests.get(url)
+                if response.status_code == 200:
+                    data = response.json()
+                    return data["info"]["version"]
 
+    def find(self) -> dict:
+        """Find all requirements for a project and return a list of them"""
+        module_names = set()
+
+        # Read python files to find import module names
         for p in self.project.rglob('*.py'):
             p_resolved = p.resolve()
 
@@ -99,7 +139,9 @@ class Reqs:
                         parts = line.split()[1]
                         module_name = parts.split('.')[0]  # Get the original module name
 
-                        if not self.is_internal_module(parts, p_resolved) and self.conditions(module_name, site_packages):
-                            requirements.add(module_name)
+                        if not self.is_internal_module(parts, p_resolved) and self.conditions(module_name):
+                            module_names.add(module_name)
 
-        return sorted(requirements)
+        pypi_names = get_pypi_names(sorted(module_names))
+        requirements = {m[1]: self.get_module_version(m) if self.version else None for m in pypi_names.items()}
+        return requirements

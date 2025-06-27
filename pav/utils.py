@@ -1,5 +1,6 @@
 import os
 import sys
+import click
 import logging
 import subprocess
 from pathlib import Path
@@ -24,15 +25,20 @@ if not logger.hasHandlers():
     logger.addHandler(handler)
 
 
-def get_venv_path(venv_path: str | None) -> Path | None:
+def get_venv_path(venv_path: str | None, dir_path: Path|None = None) -> Path | None:
     """Specify venv path"""
 
+    current_dir = Path.cwd()
     if venv_path is None:
-        current_dir = Path.cwd()
-        if (current_dir / "venv").exists():
+        if dir_path and (dir_path / "venv").exists():
+            venv_path = dir_path / "venv"
+        elif (current_dir / "venv").exists():
             venv_path = current_dir / "venv"
+
+        if venv_path is not None:
+            click.echo(click.style("venv detected: ", fg="green") + str(venv_path.resolve()) + "\n")
     else:
-        venv_path = Path(venv_path)
+        venv_path = (current_dir / venv_path).resolve()
 
     return venv_path
 
@@ -60,12 +66,14 @@ def get_python_command() -> str:
     logger.error("No compatible Python 3 interpreter found on the system.")
 
 
-def activate_venv_and_run(command: str, venv_path: Path | None = None, chdir_path: Path | None = None) -> None:
+def activate_venv_and_run(command: str, venv_path: Path | None = None, chdir_path: Path | None = None,
+                          capture_output: bool = False) -> str|None:
     """
     Activate venv and run command
     :param venv_path: Path to the venv directory
     :param command: Command to be executed
     :param chdir_path: The directory path to which the current path should be changed
+    :param capture_output: Should the function return the result of the command or display it in the terminal?
     """
 
     try:
@@ -91,12 +99,15 @@ def activate_venv_and_run(command: str, venv_path: Path | None = None, chdir_pat
             # Create a command to run the activation script and execute the command
             if os.name == "nt":  # Windows
                 cmd = f'"{activate_script}" & {command}'
-                subprocess.run(cmd, shell=True)
+                output = subprocess.run(cmd, shell=True, capture_output=capture_output, text=True)
             else:  # Mac/Linux
                 cmd = f'source "{activate_script}" && {command}'
-                subprocess.run(cmd, shell=True, executable="/bin/bash")  # To use the "source" command, must change the shell from "/bin/sh" to "/bin/bash"
+                # To use the "source" command, must change the shell from "/bin/sh" to "/bin/bash"
+                output = subprocess.run(cmd, shell=True, executable="/bin/bash", capture_output=capture_output, text=True)
         else:
             # If no venv_path is provided, run the command directly
-            subprocess.run(command, shell=True)
+            output = subprocess.run(command, shell=True, capture_output=capture_output, text=True)
+
+        return output.stdout.strip() if capture_output else None
     except Exception as e:
         logger.error(e)
