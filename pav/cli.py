@@ -74,7 +74,6 @@ def cmd(command: str, venv_path: str | None):
 def shell(venv_path: str | None, workdir: str | None):
     """Open shell to execute commands (To exit shell, enter "exit")"""
 
-    current_dir = Path.cwd()  # Get the current working directory
     if workdir is not None:
         chdir(workdir)  # Change the working directory
         working_dir = Path(workdir)
