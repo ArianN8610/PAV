@@ -105,8 +105,12 @@ def shell(venv_path: str | None, workdir: str | None):
 @click.option('--version', is_flag=True, help='Display module versions.')
 @click.option(
     "-o", "--output",
-    type=click.Path(file_okay=True, dir_okay=False), default=None, flag_value="requirements.txt",
-    help="Save results to a file. If provided without a value, defaults to 'requirements.txt'"
+    nargs=0|1,
+    default=None,
+    is_flag=False,
+    flag_value="requirements.txt",
+    type=click.Path(file_okay=True, dir_okay=False),
+    help="Save results to a file. If used without a value, defaults to 'requirements.txt'."
 )
 @click.option("-i", "--install", is_flag=True, help="Install the found packages in venv")
 def reqs(project, exist, standard, version, output, venv_path, install):
