@@ -11,6 +11,7 @@ EXCLUDED_DIRS = (
     "node_modules", "dist", "build", "migrations", "logs", "coverage", ".coverage",
     "staticfiles", "media", ".pytest_cache"
 )
+MAPPING_PATH = Path(__file__).parent / "mapping"
 
 
 def is_relative_to(path):
@@ -34,8 +35,7 @@ def is_standard_library(module_name: str) -> bool:
 
 def get_pypi_names(modules: list[str]) -> dict:
     """Get PyPI module names from mapping file"""
-    mapping_path = Path(__file__).parent / "mapping"
-    with open(mapping_path, "r") as f:
+    with open(MAPPING_PATH, "r") as f:
         names = dict(line.strip().split(":") for line in f)
     return {p: names.get(p, p) for p in modules}
 

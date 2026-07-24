@@ -4,17 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pav"
-version = "1.4.2"
+version = "1.4.3"
 description = "PAV is a Python library with features to easily work with venv"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-    {name = "Arian", email = "ariannasiri86@gmail.com"}
+    {name = "Groot"}
 ]
 requires-python = ">=3.6"
-dependencies = ["click==8.1.8"]
-urls = {Homepage = "https://github.com/ArianN8610/PAV"}
+dependencies = ["click>=8.1,<9"]
+
+[project.urls]
+Homepage = "https://github.com/grootle/PAV"
+Repository = "https://github.com/grootle/PAV"
+Issues = "https://github.com/grootle/PAV/issues"
 
 [project.scripts]
 pav = "pav.cli:main"
