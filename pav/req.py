@@ -1,5 +1,4 @@
-import re
-import requests
+import re, requests, ast
 from pathlib import Path
 from sysconfig import get_path
 from importlib.util import find_spec
@@ -38,6 +37,56 @@ def get_pypi_names(modules: list[str]) -> dict:
     with open(MAPPING_PATH, "r") as f:
         names = dict(line.strip().split(":") for line in f)
     return {p: names.get(p, p) for p in modules}
+
+
+def get_imports(source: str):
+    """
+    Extract the root library names from all absolute imports
+    found anywhere in a Python source code string
+
+    Examples of supported imports:
+
+        import numpy
+        import numpy as np
+        import numpy.linalg
+        import os, sys, json
+
+        from requests import get
+        from requests import Session as S
+        from requests.sessions import Session
+
+        from requests import (
+            get,
+            post,
+            Session,
+        )
+
+    Relative imports are ignored:
+
+        from . import utils
+        from .utils import foo
+        from ..config import settings
+
+    Yield:
+        Module name
+    """
+
+    # Parse the entire source code into an Abstract Syntax Tree (AST)
+    tree = ast.parse(source)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):  # Handle normal imports
+            # node.names contains every imported module in this statement
+            for alias in node.names:
+                yield alias.name
+        elif isinstance(node, ast.ImportFrom):  # Handle "from ... import ..." statements
+            # Ignore relative imports
+            if node.level > 0:
+                continue
+
+            # node.module contains the module after "from"
+            if node.module:
+                yield node.module
 
 
 class Reqs:
@@ -129,18 +178,14 @@ class Reqs:
             if is_relative_to(p_resolved):
                 continue
 
-            # Read file line by line
             with open(p_resolved, 'r', encoding='utf-8', errors='ignore') as f:
-                for line in f:
-                    line = line.strip()
+                source = f.read()
 
-                    # Find lines that import something
-                    if line.startswith(('import ', 'from ')):
-                        parts = line.split()[1]
-                        module_name = parts.split('.')[0]  # Get the original module name
+            for parts in get_imports(source):
+                module_name = parts.split('.')[0]  # Get the original module name
 
-                        if not self.is_internal_module(parts, p_resolved) and self.conditions(module_name):
-                            module_names.add(module_name)
+                if not self.is_internal_module(parts, p_resolved) and self.conditions(module_name):
+                    module_names.add(module_name)
 
         pypi_names = get_pypi_names(sorted(module_names))
         requirements = {m[1]: self.get_module_version(m) if self.version else None for m in pypi_names.items()}

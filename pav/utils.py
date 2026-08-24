@@ -1,8 +1,4 @@
-import os
-import sys
-import click
-import logging
-import subprocess
+import os, sys, click, logging, subprocess
 from pathlib import Path
 
 
