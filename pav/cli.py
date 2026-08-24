@@ -1,7 +1,7 @@
 from os import chdir
+from pathlib import Path
 
 import click
-from pathlib import Path
 
 from .req import Reqs
 from .utils import activate_venv_and_run, get_python_command, get_venv_path
@@ -113,7 +113,15 @@ def shell(venv_path: str | None, workdir: str | None):
     help="Save results to a file. If used without a value, defaults to 'requirements.txt'."
 )
 @click.option("-i", "--install", is_flag=True, help="Install the found packages in venv")
-def reqs(project, exist, standard, version, output, venv_path, install):
+@click.option(
+    "-E", "--extension",
+    help="Specify the file extensions to search for modules. You can provide multiple extensions.",
+    type=click.Choice(["py", "pyw", "ipynb"]),
+    multiple=True,
+    default=("py",),
+    show_default=True
+)
+def reqs(project, exist, standard, version, output, venv_path, install, extension):
     """Find requirements for a project or install them after finding"""
 
     project_path = Path(project)
@@ -130,7 +138,7 @@ def reqs(project, exist, standard, version, output, venv_path, install):
         click.echo(click.style("Warning: It may take some time to display the results because "
                                "need to search PyPi to find the version of some modules.\n", fg="yellow"))
 
-    requirements = Reqs(project_path, exist, standard, venv_path, version).find()
+    requirements = Reqs(project_path, exist, standard, venv_path, version, extension).find()
 
     if requirements:
         result = '\n'.join(

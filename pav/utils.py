@@ -1,9 +1,10 @@
-import os
-import sys
-import click
 import logging
+import os
 import subprocess
+import sys
 from pathlib import Path
+
+import click
 
 
 class ExitOnErrorHandler(logging.StreamHandler):

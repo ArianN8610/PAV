@@ -58,14 +58,15 @@ pav reqs -p core -e false -o
 ```
 
 #### Options
-| Option             | Description                                                                   |
-|--------------------|-------------------------------------------------------------------------------|
-| `-p`, `--project`  | Path to project for finding requirements (**default:** current directory `.`) |
-| `-s`, `--standard` | Filter based on Python's built-in modules (true \| false)                     |
-| `-e`, `--exist`    | Filter based on modules installed in venv (true \| false)                     |
-| `--version`        | Find module versions from venv or PyPi                                        |
-| `-o`, `--output`   | Save results to a file (**default:** `requirements.txt`)                      |
-| `-i`, `--install`  | Install the found packages in venv                                            |
+| Option | Description |
+|-|-|
+| `-p`, `--project` | Path to project for finding requirements (**default:** current directory `.`) |
+| `-s`, `--standard` | Filter based on Python's built-in modules (true \| false) |
+| `-e`, `--exist` | Filter based on modules installed in venv (true \| false) |
+| `--version` | Find module versions from venv or PyPi |
+| `-o`, `--output` | Save results to a file (**default:** `requirements.txt`) |
+| `-i`, `--install` | Install the found packages in venv |
+| `-E`, `--extension` | Specify the file extensions to search for modules. You can provide multiple extensions (**choices:** `py`, `pyw`, `ipynb` - **default:** `py`) |
 
 
 ## Requirements
